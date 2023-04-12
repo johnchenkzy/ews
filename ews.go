@@ -87,7 +87,7 @@ func (c *client) SendAndReceive(body []byte) ([]byte, error) {
 		return nil, err
 	}
 	defer req.Body.Close()
-	req.Header.Set("Content-Type", "text/xml")
+	req.Header.Set("Content-Type", "text/xml; charset=UTF-8")
 	req.Header.Set("User-Agent", "ExchangeServicesClient/0.0.0.0")
 	req.Header.Set("Accept", "text/xml")
 	req.Header.Set("Keep-Alive", "300")

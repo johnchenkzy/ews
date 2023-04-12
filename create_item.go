@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"log"
+	"mime"
 	"os"
 	"path/filepath"
 	"time"
@@ -47,6 +48,7 @@ type Attachments struct {
 type FileAttachment struct {
 	Content        string `xml:"t:Content"`
 	Name           string `xml:"t:Name"`
+	ContentType    string `xml:"t:ContentType,omitempty"`
 	IsInline       bool   `xml:"t:IsInline"`
 	IsContactPhoto bool   `xml:"t:IsContactPhoto"`
 }
@@ -130,10 +132,18 @@ func CreateFileAttachmentByNameAndPath(name string, path string) FileAttachment 
 	if name == "" {
 		_, name = filepath.Split(path)
 	}
+	ext := filepath.Ext(path)
+
+	mimeType := mime.TypeByExtension(ext)
+	if mimeType == "" {
+		mimeType = "application/octet-stream"
+	}
+	mimeType = mime.FormatMediaType(mimeType, map[string]string{"charset": "UTF-8"})
 
 	return FileAttachment{
 		Content:        base64.StdEncoding.EncodeToString(b),
 		Name:           name,
+		ContentType:    mimeType,
 		IsInline:       false,
 		IsContactPhoto: false,
 	}
@@ -225,7 +235,7 @@ func createMessageItem(c Client, m ...Message) error {
 // https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/createitem-operation-email-message
 func CreateMessageItem(c Client, m ...Message) error {
 	for i := range m {
-		if len(m[i].Attachments.FileAttachment) > 0 {
+		if m[i].Attachments != nil && len(m[i].Attachments.FileAttachment) > 0 {
 			return createMessageItemWithAttachment(c, m...)
 		}
 	}
