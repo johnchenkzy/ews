@@ -16,8 +16,8 @@ Exchange Web Service client for golang, base on `mhewedy/ews` , if you feel usef
 
 ### TODO:
 
-- [ ] Inline Attachment - like picture in email body.
-- [ ] Support html email body with inline attachment.
+- [x] Inline Attachment - like picture in email body.
+- [x] Support html email body with inline attachment.
 - [x] Support Mail CC and BCC.
 
 ### usage:
@@ -66,7 +66,8 @@ func main() {
 | Exchange mailbox data operations |                      |                                    |
 |                                  | CreateItem operation | ✔️ (Email & Calendar & Attachment) |
 |                                  | GetUserPhoto         | ✔️                                 |
-| CreateAttachment operation       | ✔️                   |                                    |
+| CreateAttachment operation       | FileAttachment       | ✔️                                 |
+|                                  | FileInlineAttachment | ✔️                                 |
 | Availability operations          |                      |                                    |
 |                                  | GetUserAvailability  | ✔️                                 |
 |                                  | GetRoomLists         | ✔️                                 |
