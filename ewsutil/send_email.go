@@ -12,9 +12,13 @@ type Email struct {
 	Body    string
 	BodyType string
 	Attachments []string
+	InlineAttachments InlineAttachment
 	Cc []string
 	Bcc []string
 }
+
+/// key is the cid, value is the path of the attachment
+type InlineAttachment map[string]string
 
 const (
 	BodyTypeText = "Text"
@@ -92,16 +96,25 @@ func SendEmails(c ews.Client, email Email) error {
 		m.BccRecipients.Mailbox = append(m.BccRecipients.Mailbox, mb...)
 	}
 
-	// deal Attachments
+	// deal file Attachments
 	if len(email.Attachments) > 0 {
 		m.Attachments = ews.CreateAttachmentsByPaths(email.Attachments...)
+	}
+	// deal inline attachments
+	if len(email.InlineAttachments) > 0 {
+		if m.Attachments != nil {
+			newAttachments := ews.CreateInlineAttachments(email.InlineAttachments)
+			m.Attachments.FileAttachment = append(m.Attachments.FileAttachment, newAttachments.FileAttachment...)
+		} else {
+			m.Attachments = ews.CreateInlineAttachments(email.InlineAttachments)
+		}
 	}
 
 	return ews.CreateMessageItem(c, m)
 }
 
 // send email with attachment
-func SendEmailWithAttachment(c ews.Client, to []string, subject, body string, attachmentPaths []string) error {
+func SendEmailWithFileAttachment(c ews.Client, to []string, subject, body string, attachmentPaths []string) error {
 	m := ews.Message{
 		ItemClass: "IPM.Note",
 		Subject:   subject,

@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+type InlineAttachment map[string]string
+
 type CreateItem struct {
 	XMLName                struct{}           `xml:"m:CreateItem"`
 	MessageDisposition     string             `xml:"MessageDisposition,attr"`
@@ -50,6 +52,7 @@ type FileAttachment struct {
 	Name           string `xml:"t:Name"`
 	ContentType    string `xml:"t:ContentType,omitempty"`
 	IsInline       bool   `xml:"t:IsInline"`
+	ContentId      string `xml:"t:ContentId,omitempty"`
 	IsContactPhoto bool   `xml:"t:IsContactPhoto"`
 }
 
@@ -118,8 +121,16 @@ func CreateAttachmentsByPaths(paths ...string) *Attachments {
 	return &attachments
 }
 
-// Create FileAttachment By Name and Path
-func CreateFileAttachmentByNameAndPath(name string, path string) FileAttachment {
+func CreateInlineAttachments(attachmentInfos map[string]string) *Attachments {
+	var attachments Attachments
+	for name, path := range attachmentInfos {
+		attachments.FileAttachment = append(attachments.FileAttachment, createFileAttachment(name, path, true))
+	}
+	return &attachments
+}
+
+// Create FileAttachment By Name and Path and Inline
+func createFileAttachment(name string, path string, inline bool) FileAttachment {
 	f, err := os.Open(path)
 	if err != nil {
 		log.Fatal(err)
@@ -139,18 +150,22 @@ func CreateFileAttachmentByNameAndPath(name string, path string) FileAttachment 
 		mimeType = "application/octet-stream"
 	}
 	mimeType = mime.FormatMediaType(mimeType, map[string]string{"charset": "UTF-8"})
-
-	return FileAttachment{
+	fileAttachment := FileAttachment{
 		Content:        base64.StdEncoding.EncodeToString(b),
 		Name:           name,
 		ContentType:    mimeType,
-		IsInline:       false,
+		IsInline:       inline,
 		IsContactPhoto: false,
 	}
+	if inline {
+		fileAttachment.ContentId = name
+	}
+
+	return fileAttachment
 }
 
 func CreateFileAttachmentByPath(path string) FileAttachment {
-	return CreateFileAttachmentByNameAndPath("", path)
+	return createFileAttachment("", path, false)
 }
 
 func createMessageItemWithAttachment(c Client, m ...Message) error {
